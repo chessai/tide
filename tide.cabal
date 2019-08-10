@@ -1,0 +1,35 @@
+cabal-version: 2.2
+
+name:
+  tide
+version:
+  0.1.0.0
+synopsis:
+  Encoding of audio data to WAV files
+-- description:
+-- bug-reports:
+license:
+  MIT
+license-file:
+  LICENSE
+author:
+  Justin Prindle
+maintainer:
+  jprindle6@gatech.edu
+-- copyright:
+category:
+  Sound
+extra-source-files:
+  CHANGELOG.md
+
+library
+  -- exposed-modules:
+  -- other-modules:
+  -- other-extensions:
+  build-depends:
+    base ^>=4.12.0.0
+  hs-source-dirs:
+    src
+  default-language:
+    Haskell2010
+

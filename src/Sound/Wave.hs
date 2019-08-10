@@ -1,0 +1,4 @@
+module Sound.Wave
+  (
+  ) where
+
