@@ -1,4 +1,6 @@
+{-# language StandaloneDeriving #-}
 {-# language RecordWildCards #-}
+{-# language GeneralizedNewtypeDeriving #-}
 {-# language FlexibleContexts #-}
 {-# language DerivingStrategies #-}
 {-# language OverloadedStrings #-}
@@ -58,6 +60,9 @@ data WaveException
   deriving stock (Eq, Show)
 
 newtype WaveData d = WaveData { getWaveData :: SampleArr d d }
+deriving newtype instance (Eq d,   Eq   (SampleArr d d)) => Eq   (WaveData d)
+deriving newtype instance (Ord d,  Ord  (SampleArr d d)) => Ord  (WaveData d)
+deriving newtype instance (Show d, Show (SampleArr d d)) => Show (WaveData d)
 
 -- | This instance accounts for the leading metadata in the data chunk
 instance forall d. WaveSample d => Binary (WaveData d) where
@@ -81,6 +86,9 @@ data WaveFile d = WaveFile
   , _waveFileSampleRate  :: !Word32
   , _waveFileData        :: WaveData d
   }
+
+deriving stock instance (Eq d,   Eq   (SampleArr d d)) => Eq   (WaveFile d)
+deriving stock instance (Show d, Show (SampleArr d d)) => Show (WaveFile d)
 
 instance WaveSample d => Binary (WaveFile d) where
   put = putWaveFile
