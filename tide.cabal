@@ -5,7 +5,7 @@ name:
 version:
   0.1.0.0
 synopsis:
-  Encoding of audio data to WAV files
+  Encoding/decoding of custom audio data to WAV files
 -- description:
 -- bug-reports:
 license:
@@ -23,13 +23,23 @@ extra-source-files:
   CHANGELOG.md
 
 library
-  -- exposed-modules:
+  exposed-modules:
+    Sound.Wave
+      Sound.Wave.Sample
+      Sound.Wave.Encoding
   -- other-modules:
   -- other-extensions:
   build-depends:
-    base ^>=4.12.0.0
+    , base ^>= 4.12.0.0
+    , binary >= 0.8 && < 0.9
+    , bytestring >= 0.10 && < 0.11
+    , text >= 1.2 && < 1.3
+    , primitive >= 0.7 && < 0.8
   hs-source-dirs:
     src
   default-language:
     Haskell2010
+  ghc-options:
+    -Wall
+    -O2
 
