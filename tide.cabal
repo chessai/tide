@@ -25,8 +25,9 @@ extra-source-files:
 library
   exposed-modules:
     Sound.Wave
-      Sound.Wave.Sample
+      Sound.Wave.Channels
       Sound.Wave.Encoding
+      Sound.Wave.Sample
   -- other-modules:
   -- other-extensions:
   build-depends:

@@ -1,19 +1,13 @@
-{-# lAnGuAgE DerivingStrategies #-}
-{-# lAnGuAgE ScopedTypeVariables #-}
+{-# language ScopedTypeVariables #-}
 {-# language AllowAmbiguousTypes #-}
-{-# language DeriveGeneric #-}
-{-# language LambdaCase #-}
-{-# language MagicHash #-}
 {-# language TypeApplications #-}
 
 module Sound.Wave.Sample
-  ( Stereo(..)
-  , WaveSample(..)
+  ( WaveSample(..)
   , sampleSize
   ) where
 
 import Data.Word
-import GHC.Generics
 
 import Data.Binary
 import Data.Binary.Put
@@ -64,17 +58,4 @@ instance WaveSample Double where
   bytesPerChannel = 8
   getSample = getDoublele
   putSample = putDoublele
-
-data Stereo a = Stereo
-  { _stereoChan1 :: a
-  , _stereoChan2 :: a
-  }
-  deriving stock (Eq, Ord, Show)
-  deriving stock (Generic)
-
-instance forall a. WaveSample a => WaveSample (Stereo a) where
-  numChannels = 2 * numChannels @a
-  bytesPerChannel = bytesPerChannel @a
-  getSample = Stereo <$> getSample <*> getSample
-  putSample (Stereo c1 c2) = putSample c1 <> putSample c2
 
