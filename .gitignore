@@ -1,5 +1,11 @@
+# Cabal build output
 .cabal*
 *.config
 .ghc*
 dist*/
+
+# WAV files from testing
 *.wav
+
+# ctags
+tags
