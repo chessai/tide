@@ -38,20 +38,38 @@ instance WaveSample Word8 where
   getSample = getWord8
   putSample = putWord8
 
+instance WaveSample Word16 where
+  numChannels = 1
+  bytesPerChannel = 2
+  getSample = getWord16le
+  putSample = putWord16le
+
+instance WaveSample Word32 where
+  numChannels = 1
+  bytesPerChannel = 4
+  getSample = getWord32le
+  putSample = putWord32le
+
 instance WaveSample Float where
   numChannels = 1
   bytesPerChannel = 4
   getSample = getFloatle
   putSample = putFloatle
 
+instance WaveSample Double where
+  numChannels = 1
+  bytesPerChannel = 8
+  getSample = getDoublele
+  putSample = putDoublele
+
 data Stereo a = Stereo
   { _stereoChan1 :: a
   , _stereoChan2 :: a
   }
 
-instance WaveSample a => WaveSample (Stereo a) where
-  numChannels = 2
-  bytesPerChannel = 4
+instance forall a. WaveSample a => WaveSample (Stereo a) where
+  numChannels = 2 * numChannels @a
+  bytesPerChannel = bytesPerChannel @a
   getSample = Stereo <$> getSample <*> getSample
   putSample (Stereo c1 c2) = putSample c1 <> putSample c2
 

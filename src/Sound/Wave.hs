@@ -5,7 +5,8 @@
 {-# language TypeApplications #-}
 
 module Sound.Wave
-  ( WaveData(..)
+  ( module Wave
+  , WaveData(..)
   , WaveException(..)
   , WaveFile(..)
   , decodeWave
@@ -27,8 +28,8 @@ import qualified Data.ByteString.Char8 as BC8
 import qualified Data.Primitive.Array as PA
 import qualified Data.Text as T
 
-import Sound.Wave.Sample
-import Sound.Wave.Encoding
+import Sound.Wave.Sample as Wave
+import Sound.Wave.Encoding as Wave
 
 data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
