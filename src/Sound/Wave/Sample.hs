@@ -1,5 +1,7 @@
+{-# lAnGuAgE DerivingStrategies #-}
 {-# lAnGuAgE ScopedTypeVariables #-}
 {-# language AllowAmbiguousTypes #-}
+{-# language DeriveGeneric #-}
 {-# language LambdaCase #-}
 {-# language MagicHash #-}
 {-# language TypeApplications #-}
@@ -11,6 +13,7 @@ module Sound.Wave.Sample
   ) where
 
 import Data.Word
+import GHC.Generics
 
 import Data.Binary
 import Data.Binary.Put
@@ -66,6 +69,8 @@ data Stereo a = Stereo
   { _stereoChan1 :: a
   , _stereoChan2 :: a
   }
+  deriving stock (Eq, Ord, Show)
+  deriving stock (Generic)
 
 instance forall a. WaveSample a => WaveSample (Stereo a) where
   numChannels = 2 * numChannels @a
