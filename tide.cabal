@@ -33,8 +33,8 @@ library
     , base ^>= 4.12.0.0
     , binary >= 0.8 && < 0.9
     , bytestring >= 0.10 && < 0.11
-    , text >= 1.2 && < 1.3
     , primitive >= 0.7 && < 0.8
+    , text >= 1.2 && < 1.3
   hs-source-dirs:
     src
   default-language:
@@ -42,4 +42,22 @@ library
   ghc-options:
     -Wall
     -O2
+
+test-suite test
+  type:
+    exitcode-stdio-1.0
+  hs-source-dirs:
+    test
+  main-is:
+    Main.hs
+  -- other-modules:
+  build-depends:
+    , base ^>= 4.12.0.0
+    , tasty >= 1.2 && < 1.3
+    , tasty-hspec >= 1.1 && < 1.2
+    , tide
+  default-language:
+    Haskell2010
+  ghc-options:
+    -Wall
 
