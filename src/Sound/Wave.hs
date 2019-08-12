@@ -1,31 +1,32 @@
 {-# language RecordWildCards #-}
+{-# language FlexibleContexts #-}
 {-# language DerivingStrategies #-}
 {-# language OverloadedStrings #-}
 {-# language ScopedTypeVariables #-}
 {-# language TypeApplications #-}
+{-# language UndecidableInstances #-}
 
 module Sound.Wave
   ( module Wave
   , WaveData(..)
   , WaveException(..)
   , WaveFile(..)
-  , decodeWave
-  , encodeWave
+  , decodeWaveFile
+  , encodeWaveFile
   ) where
 
 import Control.Arrow (left)
 import Control.Monad
 import Data.Int (Int64)
 
+import qualified Data.Primitive.Contiguous as C
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
-import Data.Primitive.Array (Array)
 import Data.Text (Text)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC8
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Primitive.Array as PA
 import qualified Data.Text as T
 
 import Sound.Wave.Channels as Wave
@@ -36,8 +37,7 @@ data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
   deriving stock (Eq, Show)
 
-newtype WaveData d = WaveData { getWaveData :: Array d }
-  deriving stock (Eq, Show)
+newtype WaveData d = WaveData { getWaveData :: SampleArr d d }
 
 -- | This instance accounts for the leading metadata in the data chunk
 instance forall d. WaveSample d => Binary (WaveData d) where
@@ -48,30 +48,28 @@ instance forall d. WaveSample d => Binary (WaveData d) where
     when (size `mod` sampleBytes /= 0) $ do
       fail "Data size is not divisible by sample size"
     let len = fromIntegral (size `div` sampleBytes)
-    fmap (WaveData . PA.fromListN len) $ replicateM len (getSample @d)
+    fmap (WaveData . C.fromListN len) $ replicateM len (getSample @d)
   put (WaveData arr) = do
     putByteString "data"
-    let len = fromIntegral $ PA.sizeofArray arr
+    let len = fromIntegral $ C.size arr
         size = sampleSize @d * len
     putWord32le (fromIntegral size)
-    foldMap (putSample @d) arr
+    C.foldMap (putSample @d) arr
 
 data WaveFile d = WaveFile
   { _waveFileAudioFormat :: AudioFormat
   , _waveFileSampleRate  :: !Word32
   , _waveFileData        :: WaveData d
   }
-  deriving stock (Eq, Show)
 
 liftFailure :: (BL.ByteString, Int64, String) -> WaveException
 liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
 
-encodeWave :: WaveSample d => WaveFile d -> BL.ByteString
-encodeWave = encode
+encodeWaveFile :: WaveSample d => WaveFile d -> BL.ByteString
+encodeWaveFile = encode
 
-decodeWave :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
-decodeWave = fmap trd . left liftFailure . decodeOrFail
-  where trd (_, _, x) = x
+decodeWaveFile :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
+decodeWaveFile = fmap (\(_, _, x) -> x) . left liftFailure . decodeOrFail
 
 instance WaveSample d => Binary (WaveFile d) where
   put = putWaveFile
@@ -82,7 +80,7 @@ putWaveFile WaveFile{..} = do
   -- RIFF header
   putByteString "RIFF"
   let fmtChunkSize = 8 + 16
-      dataLen = fromIntegral $ PA.sizeofArray $ getWaveData _waveFileData
+      dataLen = fromIntegral $ C.size $ getWaveData _waveFileData
       dataSize = sampleSize @d * dataLen
       dataChunkSize = 8 + dataSize
       chunkSize = 4 + fmtChunkSize + dataChunkSize

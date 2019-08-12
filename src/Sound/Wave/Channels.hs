@@ -2,12 +2,15 @@
 {-# language DerivingStrategies #-}
 {-# language ScopedTypeVariables #-}
 {-# language TypeApplications #-}
+{-# language TypeFamilies #-}
 
 module Sound.Wave.Channels
   ( Stereo(..)
   ) where
 
 import GHC.Generics
+
+import Data.Primitive.Array
 
 import Sound.Wave.Sample
 
@@ -23,5 +26,5 @@ instance forall a. WaveSample a => WaveSample (Stereo a) where
   bytesPerChannel = bytesPerChannel @a
   getSample = Stereo <$> getSample <*> getSample
   putSample (Stereo c1 c2) = putSample c1 <> putSample c2
-
+  type SampleArr (Stereo a) = Array
 
