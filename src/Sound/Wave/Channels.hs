@@ -9,7 +9,6 @@ module Sound.Wave.Channels
   ) where
 
 import GHC.Generics
-
 import Data.Primitive.Array
 
 import Sound.Wave.Sample
@@ -22,9 +21,9 @@ data Stereo a = Stereo
   deriving stock (Generic)
 
 instance forall a. WaveSample a => WaveSample (Stereo a) where
+  type SampleArr (Stereo a) = Array
   numChannels = 2 * numChannels @a
   bytesPerChannel = bytesPerChannel @a
   getSample = Stereo <$> getSample <*> getSample
   putSample (Stereo c1 c2) = putSample c1 <> putSample c2
-  type SampleArr (Stereo a) = Array
 

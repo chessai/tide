@@ -20,3 +20,4 @@ tests = testGroup "tests"
 
 main :: IO ()
 main = defaultMain tests
+

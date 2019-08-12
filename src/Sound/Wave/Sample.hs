@@ -1,24 +1,24 @@
 {-# language AllowAmbiguousTypes #-}
-{-# language UndecidableInstances #-}
-{-# language UndecidableSuperClasses #-}
+{-# language FlexibleContexts #-}
 {-# language KindSignatures #-}
 {-# language ScopedTypeVariables #-}
 {-# language TypeApplications #-}
 {-# language TypeFamilies #-}
-{-# language FlexibleContexts #-}
+{-# language UndecidableInstances #-}
+{-# language UndecidableSuperClasses #-}
 
 module Sound.Wave.Sample
   ( WaveSample(..)
   , sampleSize
   ) where
 
-import Data.Word
 import Data.Kind
+import Data.Word
 
-import Data.Primitive.Contiguous
 import Data.Binary
-import Data.Binary.Put
 import Data.Binary.Get
+import Data.Binary.Put
+import Data.Primitive.Contiguous
 
 class (Contiguous (SampleArr d), Element (SampleArr d) d) => WaveSample d where
   -- | An array representation for the sample type
@@ -39,37 +39,37 @@ sampleSize :: forall d. WaveSample d => Word16
 sampleSize = fromIntegral (numChannels @d) * fromIntegral (bytesPerChannel @d)
 
 instance WaveSample Word8 where
+  type SampleArr Word8 = PrimArray
   numChannels = 1
   bytesPerChannel = 1
   getSample = getWord8
   putSample = putWord8
-  type SampleArr Word8 = PrimArray
 
 instance WaveSample Word16 where
+  type SampleArr Word16 = PrimArray
   numChannels = 1
   bytesPerChannel = 2
   getSample = getWord16le
   putSample = putWord16le
-  type SampleArr Word16 = PrimArray
 
 instance WaveSample Word32 where
+  type SampleArr Word32 = PrimArray
   numChannels = 1
   bytesPerChannel = 4
   getSample = getWord32le
   putSample = putWord32le
-  type SampleArr Word32 = PrimArray
 
 instance WaveSample Float where
+  type SampleArr Float = PrimArray
   numChannels = 1
   bytesPerChannel = 4
   getSample = getFloatle
   putSample = putFloatle
-  type SampleArr Float = PrimArray
 
 instance WaveSample Double where
+  type SampleArr Double = PrimArray
   numChannels = 1
   bytesPerChannel = 8
   getSample = getDoublele
   putSample = putDoublele
-  type SampleArr Double = PrimArray
 

@@ -22,3 +22,4 @@ decodeAudioFormat :: Word16 -> Maybe AudioFormat
 decodeAudioFormat = \case
   1 -> Just PCM
   _ -> Nothing
+

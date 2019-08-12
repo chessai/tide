@@ -1,10 +1,10 @@
-{-# language StandaloneDeriving #-}
-{-# language RecordWildCards #-}
-{-# language GeneralizedNewtypeDeriving #-}
-{-# language FlexibleContexts #-}
 {-# language DerivingStrategies #-}
+{-# language FlexibleContexts #-}
+{-# language GeneralizedNewtypeDeriving #-}
 {-# language OverloadedStrings #-}
+{-# language RecordWildCards #-}
 {-# language ScopedTypeVariables #-}
+{-# language StandaloneDeriving #-}
 {-# language TypeApplications #-}
 {-# language UndecidableInstances #-}
 
@@ -23,7 +23,6 @@ import Control.Arrow (left)
 import Control.Monad
 import Data.Int (Int64)
 
-import qualified Data.Primitive.Contiguous as C
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
@@ -31,6 +30,7 @@ import Data.Text (Text)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC8
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Primitive.Contiguous as C
 import qualified Data.Text as T
 
 import Sound.Wave.Channels as Wave
@@ -40,6 +40,7 @@ import Sound.Wave.Sample as Wave
 --------------------------------------------------------------------------------
 
 encodeWaveFile :: WaveSample d => WaveFile d -> BL.ByteString
+{-# INLINE encodeWaveFile #-}
 encodeWaveFile = encode
 
 decodeWaveFile :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
@@ -48,9 +49,11 @@ decodeWaveFile = fmap (\(_, _, x) -> x) . left liftFailure . decodeOrFail
     liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
 
 dumpWaveFile :: WaveSample d => FilePath -> WaveFile d -> IO ()
+{-# INLINE dumpWaveFile #-}
 dumpWaveFile path = BL.writeFile path . encode
 
 parseWaveFile :: WaveSample d => FilePath -> IO (Either WaveException (WaveFile d))
+{-# INLINE parseWaveFile #-}
 parseWaveFile = fmap decodeWaveFile . BL.readFile
 
 --------------------------------------------------------------------------------
@@ -74,12 +77,15 @@ instance forall d. WaveSample d => Binary (WaveData d) where
       fail "Data size is not divisible by sample size"
     let len = fromIntegral (size `div` sampleBytes)
     fmap (WaveData . C.fromListN len) $ replicateM len (getSample @d)
+
   put (WaveData arr) = do
     putByteString "data"
     let len = fromIntegral $ C.size arr
         size = sampleSize @d * len
     putWord32le (fromIntegral size)
     C.foldMap (putSample @d) arr
+
+--------------------------------------------------------------------------------
 
 data WaveFile d = WaveFile
   { _waveFileAudioFormat :: AudioFormat
