@@ -12,7 +12,9 @@ module Sound.Wave
   , WaveException(..)
   , WaveFile(..)
   , decodeWaveFile
+  , dumpWaveFile
   , encodeWaveFile
+  , parseWaveFile
   ) where
 
 import Control.Arrow (left)
@@ -32,6 +34,24 @@ import qualified Data.Text as T
 import Sound.Wave.Channels as Wave
 import Sound.Wave.Encoding as Wave
 import Sound.Wave.Sample as Wave
+
+--------------------------------------------------------------------------------
+
+encodeWaveFile :: WaveSample d => WaveFile d -> BL.ByteString
+encodeWaveFile = encode
+
+decodeWaveFile :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
+decodeWaveFile = fmap (\(_, _, x) -> x) . left liftFailure . decodeOrFail
+  where
+    liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
+
+dumpWaveFile :: WaveSample d => FilePath -> WaveFile d -> IO ()
+dumpWaveFile path = BL.writeFile path . encode
+
+parseWaveFile :: WaveSample d => FilePath -> IO (Either WaveException (WaveFile d))
+parseWaveFile = fmap decodeWaveFile . BL.readFile
+
+--------------------------------------------------------------------------------
 
 data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
@@ -61,15 +81,6 @@ data WaveFile d = WaveFile
   , _waveFileSampleRate  :: !Word32
   , _waveFileData        :: WaveData d
   }
-
-liftFailure :: (BL.ByteString, Int64, String) -> WaveException
-liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
-
-encodeWaveFile :: WaveSample d => WaveFile d -> BL.ByteString
-encodeWaveFile = encode
-
-decodeWaveFile :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
-decodeWaveFile = fmap (\(_, _, x) -> x) . left liftFailure . decodeOrFail
 
 instance WaveSample d => Binary (WaveFile d) where
   put = putWaveFile
