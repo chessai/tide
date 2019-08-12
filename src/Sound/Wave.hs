@@ -23,19 +23,21 @@ import Data.Binary.Put
 import Data.Primitive.Array (Array)
 import Data.Text (Text)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BC8
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Primitive.Array as PA
 import qualified Data.Text as T
 
-import Sound.Wave.Sample as Wave
+import Sound.Wave.Channels as Wave
 import Sound.Wave.Encoding as Wave
+import Sound.Wave.Sample as Wave
 
 data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
   deriving stock (Eq, Show)
 
 newtype WaveData d = WaveData { getWaveData :: Array d }
+  deriving stock (Eq, Show)
 
 -- | This instance accounts for the leading metadata in the data chunk
 instance forall d. WaveSample d => Binary (WaveData d) where
@@ -59,6 +61,7 @@ data WaveFile d = WaveFile
   , _waveFileSampleRate  :: !Word32
   , _waveFileData        :: WaveData d
   }
+  deriving stock (Eq, Show)
 
 liftFailure :: (BL.ByteString, Int64, String) -> WaveException
 liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
@@ -70,8 +73,12 @@ decodeWave :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
 decodeWave = fmap trd . left liftFailure . decodeOrFail
   where trd (_, _, x) = x
 
-putWave :: forall d. WaveSample d => WaveFile d -> Put
-putWave WaveFile{..} = do
+instance WaveSample d => Binary (WaveFile d) where
+  put = putWaveFile
+  get = getWaveFile
+
+putWaveFile :: forall d. WaveSample d => WaveFile d -> Put
+putWaveFile WaveFile{..} = do
   -- RIFF header
   putByteString "RIFF"
   let fmtChunkSize = 8 + 16
@@ -99,8 +106,8 @@ putWave WaveFile{..} = do
   -- "data" subchunk
   put _waveFileData
 
-getWave :: forall d. WaveSample d => Get (WaveFile d)
-getWave = do
+getWaveFile :: forall d. WaveSample d => Get (WaveFile d)
+getWaveFile = do
   let checkId expected chunkType = do
         chunkId <- getByteString 4
         when (chunkId /= expected) $ do
@@ -131,8 +138,4 @@ getWave = do
     , _waveFileSampleRate  = sampleRate
     , _waveFileData        = waveData
     }
-
-instance WaveSample d => Binary (WaveFile d) where
-  put = putWave
-  get = getWave
 
