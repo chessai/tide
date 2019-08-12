@@ -7,6 +7,8 @@
 {-# language UndecidableInstances #-}
 {-# language UndecidableSuperClasses #-}
 
+-- | Types and functions for decoding/encoding audio samples in the WAV file
+-- data chunk.
 module Sound.Wave.Sample
   ( WaveSample(..)
   , sampleSize
@@ -20,6 +22,8 @@ import Data.Binary.Get
 import Data.Binary.Put
 import Data.Primitive.Contiguous
 
+-- | The type of a single sample of audio in a WAV file. Note that each type is
+-- polymorphic in the array that the data chunk uses to represent it.
 class (Contiguous (SampleArr d), Element (SampleArr d) d) => WaveSample d where
   -- | An array representation for the sample type
   type SampleArr d :: Type -> Type

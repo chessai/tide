@@ -8,6 +8,8 @@
 {-# language TypeApplications #-}
 {-# language UndecidableInstances #-}
 
+-- | Functions for parsing and encoding WAV files with custom audio sample
+-- formats.
 module Sound.Wave
   ( module Wave
   , WaveData(..)
@@ -34,34 +36,44 @@ import qualified Data.Primitive.Contiguous as C
 import qualified Data.Text as T
 
 import Sound.Wave.Channels as Wave
-import Sound.Wave.Encoding as Wave
+import Sound.Wave.Encoding
+import Sound.Wave.Encoding as Wave (AudioFormat(..))
 import Sound.Wave.Sample as Wave
 
 --------------------------------------------------------------------------------
 
+-- | Turn a WAV file into its 'BL.ByteString' representation
 encodeWaveFile :: WaveSample d => WaveFile d -> BL.ByteString
 {-# INLINE encodeWaveFile #-}
 encodeWaveFile = encode
 
+-- | Parse a 'BL.ByteString' into the WAV file it represents, or return a 'Left
+-- WaveException' is it failed. Note that this expects you to know the
+-- representation of the samples in advance.
 decodeWaveFile :: WaveSample d => BL.ByteString -> Either WaveException (WaveFile d)
 decodeWaveFile = fmap (\(_, _, x) -> x) . left liftFailure . decodeOrFail
   where
     liftFailure (src, off, msg) = WaveParseException (BL.toStrict src, off, T.pack msg)
 
+-- | Like 'encodeWaveFile', but write to the provided 'FilePath'.
 dumpWaveFile :: WaveSample d => FilePath -> WaveFile d -> IO ()
 {-# INLINE dumpWaveFile #-}
 dumpWaveFile path = BL.writeFile path . encode
 
+-- | Like 'decodeWaveFile', but read from the provided 'FilePath'.
 parseWaveFile :: WaveSample d => FilePath -> IO (Either WaveException (WaveFile d))
 {-# INLINE parseWaveFile #-}
 parseWaveFile = fmap decodeWaveFile . BL.readFile
 
 --------------------------------------------------------------------------------
 
+-- | An exception that occurred during WAV decoding.
 data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
   deriving stock (Eq, Show)
 
+-- | A contiguous array of the audio samples from the data chunk. Note that the
+-- array representation is polymorphic with respect to its element type.
 newtype WaveData d = WaveData { getWaveData :: SampleArr d d }
 deriving newtype instance (Eq d,   Eq   (SampleArr d d)) => Eq   (WaveData d)
 deriving newtype instance (Ord d,  Ord  (SampleArr d d)) => Ord  (WaveData d)
@@ -87,6 +99,10 @@ instance forall d. WaveSample d => Binary (WaveData d) where
 
 --------------------------------------------------------------------------------
 
+-- | The WAV file itself. The only parts of the RIFF/format headers that aren't
+-- already encoded by the sample type are the audio format and sample rate.
+--
+-- /Note/: Currently, only an uncompressed PCM audio format is supported.
 data WaveFile d = WaveFile
   { _waveFileAudioFormat :: AudioFormat
   , _waveFileSampleRate  :: !Word32

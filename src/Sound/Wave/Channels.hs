@@ -4,6 +4,7 @@
 {-# language TypeApplications #-}
 {-# language TypeFamilies #-}
 
+-- | Types for dealing with the channels in audio samples
 module Sound.Wave.Channels
   ( Stereo(..)
   ) where
@@ -13,6 +14,8 @@ import Data.Primitive.Array
 
 import Sound.Wave.Sample
 
+-- | Two channels of audio. Note that this will internally be represented as a
+-- boxed array.
 data Stereo a = Stereo
   { _stereoChan1 :: a
   , _stereoChan2 :: a
