@@ -1,6 +1,7 @@
 {-# language DerivingStrategies #-}
 {-# language FlexibleContexts #-}
 {-# language GeneralizedNewtypeDeriving #-}
+{-# language DeriveGeneric #-}
 {-# language OverloadedStrings #-}
 {-# language RecordWildCards #-}
 {-# language ScopedTypeVariables #-}
@@ -26,6 +27,8 @@ module Sound.Wave
 import Control.Arrow (left)
 import Control.Monad
 import Data.Int (Int64)
+import Control.Exception
+import GHC.Generics
 
 import Data.Binary
 import Data.Binary.Get
@@ -72,10 +75,14 @@ parseWaveFile = fmap decodeWaveFile . BL.readFile
 data WaveException
   = WaveParseException (BS.ByteString, Int64, Text)
   deriving stock (Eq, Show)
+  deriving stock (Generic)
+
+instance Exception WaveException
 
 -- | A contiguous array of the audio samples from the data chunk. Note that the
 -- array representation is polymorphic with respect to its element type.
 newtype WaveData d = WaveData { getWaveData :: SampleArr d d }
+
 deriving newtype instance (Eq d,   Eq   (SampleArr d d)) => Eq   (WaveData d)
 deriving newtype instance (Ord d,  Ord  (SampleArr d d)) => Ord  (WaveData d)
 deriving newtype instance (Show d, Show (SampleArr d d)) => Show (WaveData d)
