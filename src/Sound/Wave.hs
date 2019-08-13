@@ -12,9 +12,9 @@
 -- | Functions for parsing and encoding WAV files with custom audio sample
 -- formats.
 module Sound.Wave
-  ( decodeWaveFile
+  ( encodeWaveFile
+  , decodeWaveFile
   , dumpWaveFile
-  , encodeWaveFile
   , parseWaveFile
   , WaveFile(..)
   , WaveData(..)
