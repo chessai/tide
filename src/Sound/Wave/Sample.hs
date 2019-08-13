@@ -16,6 +16,7 @@ module Sound.Wave.Sample
 
 import Data.Kind
 import Data.Word
+import Data.Int
 
 import Data.Binary
 import Data.Binary.Get
@@ -49,19 +50,19 @@ instance WaveSample Word8 where
   getSample = getWord8
   putSample = putWord8
 
-instance WaveSample Word16 where
-  type SampleArr Word16 = PrimArray
+instance WaveSample Int16 where
+  type SampleArr Int16 = PrimArray
   numChannels = 1
   bytesPerChannel = 2
-  getSample = getWord16le
-  putSample = putWord16le
+  getSample = getInt16le
+  putSample = putInt16le
 
-instance WaveSample Word32 where
-  type SampleArr Word32 = PrimArray
+instance WaveSample Int32 where
+  type SampleArr Int32 = PrimArray
   numChannels = 1
   bytesPerChannel = 4
-  getSample = getWord32le
-  putSample = putWord32le
+  getSample = getInt32le
+  putSample = putInt32le
 
 instance WaveSample Float where
   type SampleArr Float = PrimArray
