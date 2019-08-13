@@ -11,14 +11,16 @@
 -- | Functions for parsing and encoding WAV files with custom audio sample
 -- formats.
 module Sound.Wave
-  ( module Wave
-  , WaveData(..)
-  , WaveException(..)
-  , WaveFile(..)
-  , decodeWaveFile
+  ( decodeWaveFile
   , dumpWaveFile
   , encodeWaveFile
   , parseWaveFile
+  , WaveFile(..)
+  , WaveData(..)
+  , WaveException(..)
+  , AudioFormat(..)
+  , module Sound.Wave.Channels
+  , module Sound.Wave.Sample
   ) where
 
 import Control.Arrow (left)
@@ -35,10 +37,9 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Primitive.Contiguous as C
 import qualified Data.Text as T
 
-import Sound.Wave.Channels as Wave
+import Sound.Wave.Channels
 import Sound.Wave.Encoding
-import Sound.Wave.Encoding as Wave (AudioFormat(..))
-import Sound.Wave.Sample as Wave
+import Sound.Wave.Sample
 
 --------------------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ instance forall d. WaveSample d => Binary (WaveData d) where
 -- | The WAV file itself. The only parts of the RIFF/format headers that aren't
 -- already encoded by the sample type are the audio format and sample rate.
 --
--- /Note/: Currently, only an uncompressed PCM audio format is supported.
+-- /Note:/ Currently, only an uncompressed PCM audio format is supported.
 data WaveFile d = WaveFile
   { _waveFileAudioFormat :: AudioFormat
   , _waveFileSampleRate  :: !Word32

@@ -13,7 +13,7 @@ import Data.Word (Word16)
 
 -- | A bitstream encoding.
 --
--- /Note/: Currently, this only supports linear pulse-code modulation.
+-- /Note:/ Currently, this only supports linear pulse-code modulation.
 data AudioFormat = PCM
   deriving stock (Eq, Show)
 
