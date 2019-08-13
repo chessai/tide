@@ -11,7 +11,7 @@
 -- data chunk.
 module Sound.Wave.Sample
   ( WaveSample(..)
-  , sampleSize
+  , sampleBytes
   ) where
 
 import Data.Kind
@@ -24,15 +24,16 @@ import Data.Binary.Put
 import Data.Primitive.Contiguous
 
 -- | The type of a single sample of audio in a WAV file. Note that each type is
--- polymorphic in the array that the data chunk uses to represent it.
+-- polymorphic in the array that the corresponding data chunk is represented
+-- with.
 class (Contiguous (SampleArr d), Element (SampleArr d) d) => WaveSample d where
-  -- | An array representation for the sample type
+  -- | An array type for containing audio data of multiple samples
   type SampleArr d :: Type -> Type
   -- | The number of channels in a sample
   numChannels :: Word16
-  -- | The number of bytes per channel in a sample. Samples technically don't
-  --   have to be divided into bits, but otherwise, it's possible to have
-  --   non-integer block alignments (total number of bytes in a sample).
+  -- | The number of bytes per channel in a sample. Sample sizes technically
+  -- don't necessarily have to be in bytes, but then it's possible to have
+  -- non-integer block alignments (total number of bytes in a sample).
   bytesPerChannel :: Word16
   -- | Parse a single sample, in little-endian order
   getSample :: Get d
@@ -40,8 +41,8 @@ class (Contiguous (SampleArr d), Element (SampleArr d) d) => WaveSample d where
   putSample :: d -> Put
 
 -- | The size of a sample, in bytes
-sampleSize :: forall d. WaveSample d => Word16
-sampleSize = fromIntegral (numChannels @d) * fromIntegral (bytesPerChannel @d)
+sampleBytes :: forall d. WaveSample d => Word16
+sampleBytes = fromIntegral (numChannels @d) * fromIntegral (bytesPerChannel @d)
 
 instance WaveSample Word8 where
   type SampleArr Word8 = PrimArray

@@ -1,7 +1,7 @@
+{-# language DeriveGeneric #-}
 {-# language DerivingStrategies #-}
 {-# language FlexibleContexts #-}
 {-# language GeneralizedNewtypeDeriving #-}
-{-# language DeriveGeneric #-}
 {-# language OverloadedStrings #-}
 {-# language RecordWildCards #-}
 {-# language ScopedTypeVariables #-}
@@ -12,14 +12,18 @@
 -- | Functions for parsing and encoding WAV files with custom audio sample
 -- formats.
 module Sound.Wave
-  ( encodeWaveFile
+  (
+  -- * Encoding/decoding functions
+    encodeWaveFile
   , decodeWaveFile
   , dumpWaveFile
   , parseWaveFile
+  -- * WAV Types
   , WaveFile(..)
   , WaveData(..)
   , WaveException(..)
   , AudioFormat(..)
+  -- * Module re-exports
   , module Sound.Wave.Channels
   , module Sound.Wave.Sample
   ) where
@@ -92,16 +96,16 @@ instance forall d. WaveSample d => Binary (WaveData d) where
   get = do
     void $ getWord32be
     size <- getWord32le
-    let sampleBytes = fromIntegral $ sampleSize @d
-    when (size `mod` sampleBytes /= 0) $ do
+    let sampleSize = fromIntegral $ sampleBytes @d
+    when (size `mod` sampleSize /= 0) $ do
       fail "Data size is not divisible by sample size"
-    let len = fromIntegral (size `div` sampleBytes)
+    let len = fromIntegral (size `div` sampleSize)
     fmap (WaveData . C.fromListN len) $ replicateM len (getSample @d)
 
   put (WaveData arr) = do
     putByteString "data"
     let len = fromIntegral $ C.size arr
-        size = sampleSize @d * len
+        size = sampleBytes @d * len
     putWord32le (fromIntegral size)
     C.foldMap (putSample @d) arr
 
@@ -130,7 +134,7 @@ putWaveFile WaveFile{..} = do
   putByteString "RIFF"
   let fmtChunkSize = 8 + 16
       dataLen = fromIntegral $ C.size $ getWaveData _waveFileData
-      dataSize = sampleSize @d * dataLen
+      dataSize = sampleBytes @d * dataLen
       dataChunkSize = 8 + dataSize
       chunkSize = 4 + fmtChunkSize + dataChunkSize
   putWord32le (fromIntegral chunkSize)
@@ -145,9 +149,9 @@ putWaveFile WaveFile{..} = do
   -- SampleRate
   putWord32le _waveFileSampleRate
   -- ByteRate = SampleRate * NumChannels * BitsPerSample/8
-  putWord32le $ _waveFileSampleRate * fromIntegral (sampleSize @d)
+  putWord32le $ _waveFileSampleRate * fromIntegral (sampleBytes @d)
   -- BlockAlign = NumChannels * BitsPerSample/8
-  putWord16le $ sampleSize @d
+  putWord16le $ sampleBytes @d
   -- BitsPerSample
   putWord16le $ 8 * bytesPerChannel @d
   -- "data" subchunk
@@ -174,9 +178,9 @@ getWaveFile = do
   assertValue "Channels" channels (numChannels @d)
   sampleRate <- getWord32le
   byteRate <- getWord32le
-  assertValue "Byte rate" byteRate (sampleRate * fromIntegral (sampleSize @d))
+  assertValue "Byte rate" byteRate (sampleRate * fromIntegral (sampleBytes @d))
   blockAlign <- getWord16le
-  assertValue "Block align" blockAlign (sampleSize @d)
+  assertValue "Block align" blockAlign (sampleBytes @d)
   bitsPerSample <- getWord16le
   assertValue "Bits per sample" bitsPerSample (8 * bytesPerChannel @d)
   waveData <- get @(WaveData d)
